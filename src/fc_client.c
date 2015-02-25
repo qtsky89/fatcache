@@ -99,5 +99,6 @@ client_close(struct context *ctx, struct conn *conn)
     }
     conn->sd = -1;
 
+    async_conn_close(ctx, conn); //Jason
     conn_put(conn);
 }

@@ -81,7 +81,7 @@ struct slabclass;
 #include <errno.h>
 #include <time.h>
 #include <limits.h>
-
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -111,7 +111,13 @@ struct slabclass;
 #include <fc_itemx.h>
 #include <fc_item.h>
 #include <fc_signal.h>
-
+					//Jason start
+#include <libaio.h>
+#include <sys/eventfd.h>
+#include <fc_async.h>
+uint64_t mcount;
+uint64_t dcount;
+					//Jason end
 struct context {
     int                ep;          /* epoll device */
     int                nevent;      /* # epoll event */
@@ -153,5 +159,6 @@ void core_deinit(void);
 rstatus_t core_start(struct context *ctx);
 void core_stop(struct context *ctx);
 rstatus_t core_loop(struct context *ctx);
+
 
 #endif

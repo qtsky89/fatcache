@@ -20,6 +20,7 @@
 
 #include <fc_core.h>
 #include <fc_server.h>
+#include <fc_async.h>
 
 extern struct settings settings;
 
@@ -60,6 +61,7 @@ core_init(void)
     if (status != FC_OK) {
         return status;
     }
+    async_init(); //Jason
 
     return FC_OK;
 }
@@ -73,6 +75,12 @@ static rstatus_t
 core_recv(struct context *ctx, struct conn *conn)
 {
     rstatus_t status;
+
+    if(conn->pread_t == 1)
+    {
+    	async_pread_post(ctx, conn);
+    	return FC_OK;
+    }
 
     status = conn->recv(ctx, conn);
     if (status != FC_OK) {

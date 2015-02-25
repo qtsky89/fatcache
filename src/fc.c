@@ -743,7 +743,7 @@ main(int argc, char **argv)
     }
 
     for (;;) {
-        status = core_loop(&ctx);
+    	status = core_loop(&ctx);
         if (status != FC_OK) {
             break;
         }

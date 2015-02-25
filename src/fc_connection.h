@@ -17,7 +17,7 @@
 
 #ifndef _FC_CONNECTION_H_
 #define _FC_CONNECTION_H_
-
+#include <libaio.h>
 typedef rstatus_t (*conn_recv_t)(struct context *, struct conn*);
 typedef rstatus_t (*conn_send_t)(struct context *, struct conn*);
 
@@ -26,6 +26,7 @@ typedef void (*conn_send_done_t)(struct context *, struct conn *, struct msg *);
 
 typedef void (*conn_close_t)(struct context *, struct conn *);
 typedef bool (*conn_active_t)(struct conn *);
+
 
 struct conn {
     int                sd;             /* socket descriptor */
@@ -54,6 +55,23 @@ struct conn {
     unsigned           eof:1;          /* eof? aka passive close? */
     unsigned           done:1;         /* done? aka close? */
     unsigned           noreply:1;      /* noreply? */
+
+    //Jason start for async
+    int pread_efd; 				//To notify to epoll descriptor, when async pread is done.
+    struct preadbuf* pread_buf; //To store actual data
+
+    //These 3 meta data will use in async_pread()
+    struct iocb pread_io; 		//To have pread information
+    struct iocb* pread_iop;
+    io_context_t pread_ctx;
+
+    //These 5 meta data will use in async_pread_post()
+    bool	pread_t; 			//In the middle of async pread?
+    off_t	pread_off;
+    off_t	pread_aligned_off;
+    uint64_t	pread_cas;
+    struct		msg* pread_msg;
+    //Jason end
 };
 
 TAILQ_HEAD(conn_tqh, conn);

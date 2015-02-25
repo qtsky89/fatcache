@@ -31,4 +31,5 @@ fatcache_SOURCES =			\
 	fc_array.c fc_array.h		\
 	fc_util.c fc_util.h		\
 	fc_queue.h			\
-	fc.c
+	fc.c				\
+	fc_async.c fc_async.h

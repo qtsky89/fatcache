@@ -167,12 +167,20 @@ req_filter(struct context *ctx, struct conn *conn, struct msg *msg)
 
     return false;
 }
+extern struct slabinfo *stable;
+extern void async_pread( struct context* ctx, struct conn* conn, struct itemx* itx , struct msg* msg);
 
 static void
 req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
 {
     struct itemx *itx;
     struct item *it;
+
+    struct epoll_event event;
+    uint32_t sid;
+    uint32_t addr;
+    struct slabinfo *sinfo;
+    struct slabclass *c;
 
     itx = itemx_getx(msg->hash, msg->md);
     if (itx == NULL) {
@@ -196,7 +204,17 @@ req_process_get(struct context *ctx, struct conn *conn, struct msg *msg)
      * On a hit, we read the item with address [sid, offset] and respond
      * with item value if the item hasn't expired yet.
      */
-    it = slab_read_item(itx->sid, itx->offset);
+    it = slab_read_item(itx->sid, itx->offset);//Jason I commented out pread.
+
+    //Jason start async_pread
+    if( (it==NULL) && ( ( stable[itx->sid].mem )!= 1 ) )
+    {
+    	dcount++;
+    	async_pread(ctx, conn,itx, msg);
+    	return;
+    }
+    //Jason end
+
     if (it == NULL) {
         rsp_send_error(ctx, conn, msg, MSG_RSP_SERVER_ERROR, errno);
         return;

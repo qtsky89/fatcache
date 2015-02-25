@@ -120,12 +120,16 @@ signal_handler(int signo)
 
     log_debug(LOG_NOTICE, "signal %d (%s) received%s", signo, sig->signame,
               actionstr);
-
     if (action != NULL) {
         action();
     }
 
     if (done) {
+    	printf("\nGet ratio\n");
+    	printf("total_count: %lu (1.000) ", mcount+dcount);
+    	printf("memory_count: %lu (%.3lf), disk_count: %lu (%.3lf)\n", mcount, (double)mcount / (double)(mcount + dcount),
+    														 dcount, (double)dcount / (double)(mcount + dcount));
+
         exit(1);
     }
 }

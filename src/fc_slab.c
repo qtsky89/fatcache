@@ -30,17 +30,17 @@ static uint32_t nfull_dsinfoq;         /* # full disk slabinfo q */
 static struct slabhinfo full_dsinfoq;  /* full disk slabinfo q */
 
 static uint8_t nctable;                /* # class table entry */
-static struct slabclass *ctable;       /* table of slabclass indexed by cid */
+struct slabclass *ctable;       /* table of slabclass indexed by cid */
 
-static uint32_t nstable;               /* # slab table entry */
-static struct slabinfo *stable;        /* table of slabinfo indexed by sid */
+uint32_t nstable;               /* # slab table entry */
+struct slabinfo *stable;        	/* table of slabinfo indexed by sid */
 
 static uint8_t *mstart;                /* memory slab start */
 static uint8_t *mend;                  /* memory slab end */
 
 static off_t dstart;                   /* disk start */
 static off_t dend;                     /* disk end */
-static int fd;                         /* disk file descriptor */
+int ssd_fd;                         /* disk file descriptor */
 
 static size_t mspace;                  /* memory space */
 static size_t dspace;                  /* disk space */
@@ -49,6 +49,8 @@ static uint32_t ndslab;                /* # disk slabs */
 
 static uint8_t *evictbuf;              /* evict buffer */
 static uint8_t *readbuf;               /* read buffer */
+
+
 
 /*
  * Return the maximum space available for item sized chunks in a given
@@ -173,7 +175,7 @@ slab_from_maddr(uint32_t addr, bool verify)
  * Return the slab_size offset for the given disk slab from the base
  * of the disk.
  */
-static off_t
+off_t
 slab_to_daddr(struct slabinfo *sinfo)
 {
     off_t off;
@@ -233,9 +235,9 @@ slab_evict(void)
     slab = (struct slab *)evictbuf;
     size = settings.slab_size;
     off = slab_to_daddr(sinfo);
-    n = pread(fd, slab, size, off);
+    n = pread(ssd_fd, slab, size, off);
     if (n < size) {
-        log_error("pread fd %d %zu bytes at offset %"PRIu64" failed: %s", fd,
+        log_error("pread ssd_fd %d %zu bytes at offset %"PRIu64" failed: %s", ssd_fd,
                   size, (uint64_t)off, strerror(errno));
         return FC_ERROR;
     }
@@ -312,10 +314,10 @@ _slab_drain(void)
     slab = slab_from_maddr(msinfo->addr, true);
     size = settings.slab_size;
     off = slab_to_daddr(dsinfo);
-    n = pwrite(fd, slab, size, off);
+    n = pwrite(ssd_fd, slab, size, off);
     if (n < size) {
-        log_error("pwrite fd %d %zu bytes at offset %"PRId64" failed: %s",
-                  fd, size, off, strerror(errno));
+        log_error("pwrite ssd_fd %d %zu bytes at offset %"PRId64" failed: %s",
+                  ssd_fd, size, off, strerror(errno));
         return FC_ERROR;
     }
 
@@ -486,20 +488,27 @@ slab_read_item(uint32_t sid, uint32_t addr)
         off = (off_t)sinfo->addr * settings.slab_size + addr;
         fc_memcpy(readbuf, mstart + off, c->size);
         it = (struct item *)readbuf;
+        mcount++;
         goto done;
     }
 
-    off = slab_to_daddr(sinfo) + addr;
-    aligned_off = ROUND_DOWN(off, 512);
-    aligned_size = ROUND_UP((c->size + (off - aligned_off)), 512);
+    return NULL; //Jason If item is in the SSD.
 
-    n = pread(fd, readbuf, aligned_size, aligned_off);
+//Jason I commented out below code code
+
+/*
+  off = slab_to_daddr(sinfo) + addr;
+  aligned_off = ROUND_DOWN(off, 512);
+  aligned_size = ROUND_UP((c->size + (off - aligned_off)), 512);
+
+    n = pread(ssd_fd, readbuf, aligned_size, aligned_off);
     if (n < aligned_size) {
-        log_error("pread fd %d %zu bytes at offset %"PRIu64" failed: %s", fd,
+        log_error("pread ssd_fd %d %zu bytes at offset %"PRIu64" failed: %s", ssd_fd,
                   aligned_size, (uint64_t)aligned_off, strerror(errno));
         return NULL;
     }
     it = (struct item *)(readbuf + (off - aligned_off));
+*/
 
 done:
     ASSERT(it->magic == ITEM_MAGIC);
@@ -619,7 +628,7 @@ slab_init(void)
 
     dstart = 0;
     dend = 0;
-    fd = -1;
+    ssd_fd = -1;
 
     mspace = 0;
     dspace = 0;
@@ -663,8 +672,8 @@ slab_init(void)
     dend = ((settings.server_id + 1) * ndslab) * settings.slab_size;
 
     /* init disk descriptor */
-    fd = open(settings.ssd_device, O_RDWR | O_DIRECT, 0644);
-    if (fd < 0) {
+    ssd_fd = open(settings.ssd_device, O_RDWR | O_DIRECT, 0644);
+    if (ssd_fd < 0) {
         log_error("open '%s' failed: %s", settings.ssd_device, strerror(errno));
         return FC_ERROR;
     }
@@ -692,6 +701,8 @@ slab_init(void)
     }
     memset(readbuf, 0xff, settings.slab_size);
 
+    //posix_memalign((void**)&preadbuf, sysconf(_SC_PAGESIZE), settings.slab_size);
+
     return FC_OK;
 }
 
@@ -701,3 +712,5 @@ slab_deinit(void)
     slab_deinit_ctable();
     slab_deinit_stable();
 }
+
+

@@ -86,6 +86,9 @@ server_accept(struct context *ctx, struct conn *s)
 
     log_debug(LOG_NOTICE, "accepted c %d on s %d", c->sd, s->sd);
 
+    //Jason start async_conn_init()
+     async_conn_init(ctx,c);
+    //Jason end
     return FC_OK;
 }
 

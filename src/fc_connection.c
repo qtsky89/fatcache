@@ -229,6 +229,7 @@ conn_get(int sd, bool client)
         c->send = msg_send;
         c->close = client_close;
         c->active = client_active;
+
     } else {
         c->recv = server_recv;
         c->send = NULL;
