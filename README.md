@@ -40,3 +40,6 @@ After fatcache server is up, you can benchmark fatcache using memaslap, to do th
 You need to modify options for memaslap in src/memaslap.sh and type this command.
 	#sh src/memaslap.sh
 
+Author
+---------------
+All modification code is written by Jason Jang (Won-Hee.Jang@skhms.com).
