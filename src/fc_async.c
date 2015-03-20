@@ -87,7 +87,7 @@ void async_pread( struct context* ctx, struct conn* conn,struct itemx* itx, stru
  uint32_t	sid = itx->sid;
  uint32_t	addr = itx->offset;
 
- ASSERT(sid < nstable);
+ //ASSERT(sid < nstable);
  ASSERT(addr < settings.slab_size);
 
  sinfo = &stable[sid];

@@ -1,5 +1,5 @@
 #!/bin/bash
-memaslap -s localhost:11211 -T 4 -c 1024 -t 30m -S 15m -v 1.0
+memaslap -s  172.28.100.255:11211 -T 4 -c 128 -t 1m -S 30s -v 1.0
 
 
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-./fatcache -D /dev/mapper/my_disk  -p 11211 -s 0/1 -i 64 -m 64
+./fatcache -D /dev/nvme0n1  -a  172.28.100.255 -p 11211 -s 0/1 -i 64 -m 64
 
 
 
